@@ -16,8 +16,8 @@ from collections import defaultdict
 # Add src directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
 
-from verify_coco import verify_coco_dataset
-from split_data import split_coco_dataset
+from src.verify_coco import verify_coco_dataset
+from src.split_data import split_coco_dataset
 
 
 class TrainingPipeline:
