@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import numpy as np
 from collections import defaultdict
+from download import download_dataset
 
 # Add src directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
@@ -37,6 +38,9 @@ class TrainingPipeline:
         download_script = Path(__file__).parent / "download.py"
         result = subprocess.run([sys.executable, str(download_script)], 
                               capture_output=True, text=True)
+
+        print(result.stdout)
+        print(result.stderr)
         
         # Parse output to get dataset location
         for line in result.stdout.split('\n'):
@@ -369,6 +373,7 @@ def main():
         train_ratio=0.8,
         val_ratio=0.2
     )
+
     
     return results
 
