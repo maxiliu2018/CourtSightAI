@@ -36,6 +36,7 @@ class TrainingPipeline:
         
         # Run download script
         download_script = Path(__file__).parent / "download.py"
+        print(download_script)
         result = subprocess.run([sys.executable, str(download_script)], 
                               capture_output=True, text=True)
 
