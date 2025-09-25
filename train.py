@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import numpy as np
 from collections import defaultdict
-from download import download_dataset
+
 
 # Add src directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent))
