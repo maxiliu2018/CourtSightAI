@@ -299,19 +299,9 @@ class TrainingPipeline:
         
 
         # Save figure
-        if save_path:
-            output_dir = "results"
-            os.makedirs(output_dir, exist_ok=True)
-            save_path = os.path.join(output_dir, save_path)
-            plt.savefig(save_path, dpi=150, bbox_inches='tight')
-            print(f"✅ Visualization saved to: {save_path}")
-        else:
-            save_path = "dataset_split_analysis.png"
-            output_dir = "results"
-            os.makedirs(output_dir, exist_ok=True)
-            save_path = os.path.join(output_dir, save_path)
-            plt.savefig(save_path, dpi=150, bbox_inches='tight')
-            print(f"✅ Visualization saved to: {save_path}")
+        save_path = "/content/dataset_split_analysis.png"
+        plt.savefig(save_path, dpi=150, bbox_inches='tight')
+        print(f"✅ Visualization saved to: {save_path}")
         
         if os.path.exists(save_path):
             file_size = os.path.getsize(save_path)
