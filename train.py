@@ -49,6 +49,7 @@ class TrainingPipeline:
                 dataset_path = line.split("Saved to:")[-1].strip()
                 print(f"✅ Dataset downloaded to: {dataset_path}")
                 return dataset_path
+                print(f"✅ Dataset downloaded to: {dataset_path}")
                 
         # If parsing fails, try to find the dataset
         # Roboflow typically saves to a pattern like this
@@ -56,7 +57,7 @@ class TrainingPipeline:
         if possible_paths:
             dataset_path = str(possible_paths[0])
             print(f"✅ Dataset found at: {dataset_path}")
-            return dataset_path
+            return dataset_path 
             
         raise RuntimeError("Could not determine dataset location after download")
     
