@@ -37,9 +37,110 @@ class RTDETRTrainer:
         print(f"   Model: {model_size}")
         print(f"   Device: {self.device}")
         
+    def _coco_to_yolo_bbox(self, coco_bbox, img_width, img_height):
+        """Convert COCO bbox to YOLO format"""
+        x, y, w, h = coco_bbox
+        x_center = (x + w / 2) / img_width
+        y_center = (y + h / 2) / img_height
+        w_norm = w / img_width
+        h_norm = h / img_height
+        
+        # Clip to [0, 1]
+        x_center = max(0, min(1, x_center))
+        y_center = max(0, min(1, y_center))
+        w_norm = max(0, min(1, w_norm))
+        h_norm = max(0, min(1, h_norm))
+        
+        return [x_center, y_center, w_norm, h_norm]
+    
+    def _convert_coco_to_yolo(self, coco_dir: str, splits=['train', 'val', 'test']):
+        """
+        Convert COCO format to YOLO format in-place
+        
+        Args:
+            coco_dir: Directory containing COCO format data
+            splits: List of splits to convert
+        """
+        coco_path = Path(coco_dir)
+        
+        print(f"\n🔄 Converting COCO to YOLO format...")
+        
+        category_mapping = {}
+        category_names = {}
+        
+        for split in splits:
+            split_dir = coco_path / split
+            ann_file = split_dir / '_annotations.coco.json'
+            
+            if not ann_file.exists():
+                continue
+            
+            print(f"   Converting {split}...")
+            
+            # Load COCO annotations
+            with open(ann_file, 'r') as f:
+                coco_data = json.load(f)
+            
+            # Create labels directory
+            labels_dir = split_dir / 'labels'
+            labels_dir.mkdir(exist_ok=True)
+            
+            # Build category mapping
+            if not category_mapping:
+                categories = sorted(coco_data['categories'], key=lambda x: x['id'])
+                category_mapping = {cat['id']: idx for idx, cat in enumerate(categories)}
+                category_names = {idx: cat['name'] for idx, cat in enumerate(categories)}
+            
+            # Build image info
+            image_info = {img['id']: img for img in coco_data['images']}
+            
+            # Group annotations by image
+            annotations_by_image = {}
+            for ann in coco_data['annotations']:
+                img_id = ann['image_id']
+                if img_id not in annotations_by_image:
+                    annotations_by_image[img_id] = []
+                annotations_by_image[img_id].append(ann)
+            
+            # Convert each image's annotations
+            for img_id, img_data in image_info.items():
+                img_filename = img_data['file_name']
+                img_width = img_data['width']
+                img_height = img_data['height']
+                
+                # Create label file
+                label_filename = Path(img_filename).stem + '.txt'
+                label_path = labels_dir / label_filename
+                
+                # Get annotations
+                anns = annotations_by_image.get(img_id, [])
+                
+                if not anns:
+                    label_path.touch()
+                    continue
+                
+                # Convert to YOLO format
+                yolo_lines = []
+                for ann in anns:
+                    coco_cat_id = ann['category_id']
+                    yolo_class_idx = category_mapping[coco_cat_id]
+                    coco_bbox = ann['bbox']
+                    yolo_bbox = self._coco_to_yolo_bbox(coco_bbox, img_width, img_height)
+                    yolo_line = f"{yolo_class_idx} {' '.join(f'{x:.6f}' for x in yolo_bbox)}"
+                    yolo_lines.append(yolo_line)
+                
+                # Write label file
+                with open(label_path, 'w') as f:
+                    f.write('\n'.join(yolo_lines))
+            
+            print(f"   ✅ {split}: {len(image_info)} images converted")
+        
+        return category_names
+    
     def prepare_dataset_yaml(self, split_dir: str, output_path: str = None) -> str:
         """
         Create dataset YAML file for YOLO/RT-DETR training
+        Automatically converts COCO to YOLO format if needed
         
         Args:
             split_dir: Directory containing split dataset
@@ -50,6 +151,8 @@ class RTDETRTrainer:
         """
         split_path = Path(split_dir)
         
+        print(f"\n📋 Preparing dataset for training...")
+        
         # Load train annotations to get class names
         train_json = split_path / 'train' / '_annotations.coco.json'
         with open(train_json, 'r') as f:
@@ -59,12 +162,21 @@ class RTDETRTrainer:
         categories = {cat['id']: cat['name'] for cat in coco_data['categories']}
         class_names = [categories[i] for i in sorted(categories.keys())]
         
+        # Check if YOLO labels exist, if not convert
+        train_labels_dir = split_path / 'train' / 'labels'
+        if not train_labels_dir.exists() or not list(train_labels_dir.glob('*.txt')):
+            print(f"\n⚠️  YOLO labels not found. Converting from COCO format...")
+            category_names = self._convert_coco_to_yolo(str(split_path))
+            print(f"✅ Conversion complete!")
+        else:
+            print(f"✅ YOLO labels already exist")
+        
         # Create YAML configuration
         yaml_config = {
             'path': str(split_path.absolute()),
-            'train': 'train',
-            'val': 'val',
-            'test': 'test' if (split_path / 'test').exists() else '',
+            'train': 'train/images',
+            'val': 'val/images',
+            'test': 'test/images' if (split_path / 'test').exists() else '',
             'names': {i: name for i, name in enumerate(class_names)},
             'nc': len(class_names)
         }
@@ -78,7 +190,7 @@ class RTDETRTrainer:
         with open(output_path, 'w') as f:
             yaml.dump(yaml_config, f, default_flow_style=False, sort_keys=False)
         
-        print(f"✅ Dataset YAML created: {output_path}")
+        print(f"\n✅ Dataset YAML created: {output_path}")
         print(f"   Classes ({len(class_names)}): {', '.join(class_names)}")
         
         return str(output_path)
