@@ -171,12 +171,22 @@ class RTDETRTrainer:
         else:
             print(f"✅ YOLO labels already exist")
         
+        # Check directory structure and reorganize if needed
+        train_dir = split_path / 'train'
+        images_dir = train_dir / 'images'
+        
+        # If images/ subdirectory doesn't exist, images are in the root
+        if not images_dir.exists():
+            print(f"\n🔧 Reorganizing directory structure...")
+            self._reorganize_directory_structure(str(split_path))
+            print(f"✅ Directory structure updated")
+        
         # Create YAML configuration
         yaml_config = {
             'path': str(split_path.absolute()),
             'train': 'train/images',
             'val': 'val/images',
-            'test': 'test/images' if (split_path / 'test').exists() else '',
+            'test': 'test/images' if (split_path / 'test' / 'images').exists() else '',
             'names': {i: name for i, name in enumerate(class_names)},
             'nc': len(class_names)
         }
@@ -194,6 +204,44 @@ class RTDETRTrainer:
         print(f"   Classes ({len(class_names)}): {', '.join(class_names)}")
         
         return str(output_path)
+    
+    def _reorganize_directory_structure(self, split_dir: str):
+        """
+        Reorganize directory to have images/ and labels/ subdirectories
+        Expected structure:
+        split_dir/
+          train/
+            images/
+            labels/
+          val/
+            images/
+            labels/
+        """
+        import shutil
+        
+        split_path = Path(split_dir)
+        
+        for split in ['train', 'val', 'test']:
+            split_dir = split_path / split
+            if not split_dir.exists():
+                continue
+            
+            images_dir = split_dir / 'images'
+            labels_dir = split_dir / 'labels'
+            
+            # If images/ doesn't exist, create it and move images
+            if not images_dir.exists():
+                print(f"   Reorganizing {split}/...")
+                images_dir.mkdir(exist_ok=True)
+                
+                # Move all image files to images/
+                image_extensions = ['.jpg', '.jpeg', '.png', '.bmp', '.JPG', '.JPEG', '.PNG']
+                for ext in image_extensions:
+                    for img_file in split_dir.glob(f'*{ext}'):
+                        if img_file.is_file():
+                            shutil.move(str(img_file), str(images_dir / img_file.name))
+                
+                print(f"   ✅ {split}: Moved images to images/ subdirectory")
     
     def train(self,
               data_yaml: str,
