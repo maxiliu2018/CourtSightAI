@@ -9,6 +9,8 @@ from pathlib import Path
 from typing import Dict, Optional
 import json
 from datetime import datetime
+from google.colab import drive
+
 
 
 # Import your existing modules
@@ -300,6 +302,8 @@ def main():
     """
     Example usage of complete pipeline
     """
+
+    drive.mount('/content/drive')
     
     # Initialize pipeline
     pipeline = BasketballTrainingPipeline(base_dir="./basketball_pipeline")
@@ -313,8 +317,8 @@ def main():
         
         # Training
         model_size='rtdetr-l',  # or 'rtdetr-x' for larger model
-        epochs=100,
-        batch_size=16,
+        epochs=20,
+        batch_size=8,
         img_size=640,
         pretrained=True,
         
@@ -325,6 +329,14 @@ def main():
         # Control
         skip_training=False,
         model_path=None
+
+
+        project='/content/drive/MyDrive/CourtSightAI/models',  # SAVE TO DRIVE
+        lr0=0.001,  # LOWER learning rate (10x smaller)
+        optimizer='SGD',  # MORE STABLE than AdamW
+        amp=False,  # DISABLE mixed precision
+        deterministic=False,  # DISABLE deterministic mode
+        patience=20,  # Reduce patience
     )
     
     # Option 2: Skip training and just run tracking with existing model
