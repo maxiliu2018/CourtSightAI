@@ -9,7 +9,6 @@ from pathlib import Path
 from typing import Dict, Optional
 import json
 from datetime import datetime
-from google.colab import drive
 
 
 
@@ -303,8 +302,7 @@ def main():
     Example usage of complete pipeline
     """
 
-    drive.mount('/content/drive')
-    
+ 
     # Initialize pipeline
     pipeline = BasketballTrainingPipeline(base_dir="./basketball_pipeline")
     
