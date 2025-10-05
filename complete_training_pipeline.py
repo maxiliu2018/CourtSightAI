@@ -328,7 +328,7 @@ def main():
         
         # Control
         skip_training=False,
-        model_path=None
+        model_path=None,
 
 
         project='/content/drive/MyDrive/CourtSightAI/models',  # SAVE TO DRIVE
