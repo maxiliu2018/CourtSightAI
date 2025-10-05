@@ -252,6 +252,8 @@ class RTDETRTrainer:
               name: str = 'rtdetr_basketball',
               pretrained: bool = True,
               augment: bool = True,
+              lr0=0.001, 
+              optimizer='SGD',
               **kwargs) -> Dict:
         """
         Train RT-DETR model
@@ -315,6 +317,8 @@ class RTDETRTrainer:
             'dropout': 0.0,
             'val': True,
             'plots': True,
+            'lr0': lr0,              # Now accepts parameter
+            'optimizer': optimizer   # Now accepts parameter
         }
         
         # Data augmentation settings
