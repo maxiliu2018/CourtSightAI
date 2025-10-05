@@ -329,7 +329,6 @@ def main():
         model_path=None,
 
 
-        project='/content/drive/MyDrive/CourtSightAI/models',  # SAVE TO DRIVE
         lr0=0.001,  # LOWER learning rate (10x smaller)
         optimizer='SGD',  # MORE STABLE than AdamW
         amp=False,  # DISABLE mixed precision
