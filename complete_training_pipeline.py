@@ -328,11 +328,6 @@ def main():
         skip_training=False,
         model_path=None,
 
-
-        optimizer='SGD',  # MORE STABLE than AdamW
-        amp=False,  # DISABLE mixed precision
-        deterministic=False,  # DISABLE deterministic mode
-        patience=20,  # Reduce patience
     )
     
     # Option 2: Skip training and just run tracking with existing model
