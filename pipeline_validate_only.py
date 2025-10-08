@@ -60,14 +60,27 @@ class BasketballValidationPipeline:
     def apply_validation_fix(self):
         """Apply fix for RT-DETR validation ratio_pad bug"""
         import ultralytics.models.yolo.detect.val as detect_val
+        from ultralytics.utils.ops import scale_boxes
         
         original_scale_preds = detect_val.DetectionValidator.scale_preds
         
-        def patched_scale_preds(self, preds, img, orig_imgs, ratio_pad=None):
-            # Convert ratio_pad to expected format if it's a float
-            if ratio_pad is not None and isinstance(ratio_pad, (int, float)):
-                ratio_pad = [[ratio_pad], [0, 0]]
-            return original_scale_preds(self, preds, img, orig_imgs, ratio_pad)
+        def patched_scale_preds(self, preds, pbatch, orig_imgs):
+            """Scale predictions with original image dimensions."""
+            predn = preds.clone()
+            # Get original dimensions from batch or orig_imgs
+            if orig_imgs is not None and len(orig_imgs) > 0:
+                ori_shape = orig_imgs[0].shape[:2] if hasattr(orig_imgs[0], 'shape') else preds.shape[-2:]
+            else:
+                ori_shape = pbatch.get('ori_shape', pbatch.get('resized_shape', preds.shape[-2:]))
+            
+            # Scale boxes from inference size to original image size
+            predn[:, :4] = scale_boxes(
+                preds.shape[-2:],  # from shape
+                predn[:, :4],  # boxes to scale
+                ori_shape,  # to shape
+                ratio_pad=pbatch.get('ratio_pad')
+            )
+            return predn
         
         detect_val.DetectionValidator.scale_preds = patched_scale_preds
         print("✅ Applied RT-DETR validation fix")
