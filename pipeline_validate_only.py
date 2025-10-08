@@ -61,6 +61,8 @@ class BasketballValidationPipeline:
         """Apply fix for RT-DETR validation ratio_pad bug"""
         import ultralytics.models.yolo.detect.val as detect_val
         from ultralytics.utils.ops import scale_boxes
+
+        print(f"Start applying RT-DETR validation fix...")
         
         original_scale_preds = detect_val.DetectionValidator.scale_preds
         
