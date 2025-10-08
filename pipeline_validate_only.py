@@ -193,7 +193,7 @@ def main():
     
     # Configuration - UPDATE THESE PATHS
     MODEL_PATH = "basketball_pipeline/runs/train/basketball_rtdetr/weights/best.pt"
-    DATA_YAML = "data/split_dataset/dataset.yaml"
+    DATA_YAML = "/content/CourtSightAI/data/split_dataset/dataset.yaml"
     
     # Initialize pipeline
     pipeline = BasketballValidationPipeline(
