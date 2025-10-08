@@ -83,9 +83,9 @@ class RTDETRValidator:
                 ori_shape = pbatch.get('ori_shape', pbatch.get('resized_shape', preds.shape[-2:]))
             
             # Scale boxes from inference size to original image size
-            scale_coords(
-                predn[:, :4],
+            predn[:, :4] = scale_boxes(
                 preds.shape[-2:],  # from shape
+                predn[:, :4],  # boxes to scale
                 ori_shape,  # to shape
                 ratio_pad=pbatch.get('ratio_pad')
             )
